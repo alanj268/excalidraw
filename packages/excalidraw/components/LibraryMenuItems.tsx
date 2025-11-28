@@ -35,6 +35,7 @@ import { TextField } from "./TextField";
 import { useEditorInterface } from "./App";
 
 import { Button } from "./Button";
+import { collapseDownIcon, collapseUpIcon } from "./icons";
 
 import type { ExcalidrawLibraryIds } from "../data/types";
 
@@ -92,6 +93,10 @@ export default function LibraryMenuItems({
   >(null);
 
   const [searchInputValue, setSearchInputValue] = useState("");
+  const [isPersonalLibraryCollapsed, setIsPersonalLibraryCollapsed] =
+    useState(false);
+  const [isExcalidrawLibraryCollapsed, setIsExcalidrawLibraryCollapsed] =
+    useState(false);
 
   const IS_LIBRARY_EMPTY = !libraryItems.length && !pendingElements.length;
 
@@ -261,57 +266,72 @@ export default function LibraryMenuItems({
   const JSX_whenNotSearching = !IS_SEARCHING && (
     <>
       {!IS_LIBRARY_EMPTY && (
-        <div className="library-menu-items-container__header">
-          {t("labels.personalLib")}
+        <div
+          className="library-menu-items-container__header library-menu-items-container__header--clickable"
+          onClick={() =>
+            setIsPersonalLibraryCollapsed(!isPersonalLibraryCollapsed)
+          }
+        >
+          <span>{t("labels.personalLib")}</span>
+          <span className="library-menu-items-container__header__arrow">
+            {isPersonalLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
+          </span>
         </div>
       )}
-      {!pendingElements.length && !unpublishedItems.length ? (
-        <div className="library-menu-items__no-items">
-          {!publishedItems.length && (
-            <div className="library-menu-items__no-items__label">
-              {t("library.noItems")}
+      {!isPersonalLibraryCollapsed &&
+        (!pendingElements.length && !unpublishedItems.length ? (
+          <div className="library-menu-items__no-items">
+            {!publishedItems.length && (
+              <div className="library-menu-items__no-items__label">
+                {t("library.noItems")}
+              </div>
+            )}
+            <div className="library-menu-items__no-items__hint">
+              {publishedItems.length > 0
+                ? t("library.hint_emptyPrivateLibrary")
+                : t("library.hint_emptyLibrary")}
             </div>
-          )}
-          <div className="library-menu-items__no-items__hint">
-            {publishedItems.length > 0
-              ? t("library.hint_emptyPrivateLibrary")
-              : t("library.hint_emptyLibrary")}
           </div>
-        </div>
-      ) : (
-        <LibraryMenuSectionGrid>
-          {pendingElements.length > 0 && (
+        ) : (
+          <LibraryMenuSectionGrid>
+            {pendingElements.length > 0 && (
+              <LibraryMenuSection
+                itemsRenderedPerBatch={itemsRenderedPerBatch}
+                items={[{ id: null, elements: pendingElements }]}
+                onItemSelectToggle={onItemSelectToggle}
+                onItemDrag={onItemDrag}
+                onClick={onAddToLibraryClick}
+                isItemSelected={isItemSelected}
+                svgCache={svgCache}
+              />
+            )}
             <LibraryMenuSection
               itemsRenderedPerBatch={itemsRenderedPerBatch}
-              items={[{ id: null, elements: pendingElements }]}
+              items={unpublishedItems}
               onItemSelectToggle={onItemSelectToggle}
               onItemDrag={onItemDrag}
-              onClick={onAddToLibraryClick}
+              onClick={onItemClick}
               isItemSelected={isItemSelected}
               svgCache={svgCache}
             />
-          )}
-          <LibraryMenuSection
-            itemsRenderedPerBatch={itemsRenderedPerBatch}
-            items={unpublishedItems}
-            onItemSelectToggle={onItemSelectToggle}
-            onItemDrag={onItemDrag}
-            onClick={onItemClick}
-            isItemSelected={isItemSelected}
-            svgCache={svgCache}
-          />
-        </LibraryMenuSectionGrid>
-      )}
+          </LibraryMenuSectionGrid>
+        ))}
 
       {publishedItems.length > 0 && (
         <div
-          className="library-menu-items-container__header"
+          className="library-menu-items-container__header library-menu-items-container__header--clickable"
           style={{ marginTop: "0.75rem" }}
+          onClick={() =>
+            setIsExcalidrawLibraryCollapsed(!isExcalidrawLibraryCollapsed)
+          }
         >
-          {t("labels.excalidrawLib")}
+          <span>{t("labels.excalidrawLib")}</span>
+          <span className="library-menu-items-container__header__arrow">
+            {isExcalidrawLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
+          </span>
         </div>
       )}
-      {publishedItems.length > 0 && (
+      {publishedItems.length > 0 && !isExcalidrawLibraryCollapsed && (
         <LibraryMenuSectionGrid>
           <LibraryMenuSection
             itemsRenderedPerBatch={itemsRenderedPerBatch}

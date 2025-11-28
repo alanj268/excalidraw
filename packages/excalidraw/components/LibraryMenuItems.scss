@@ -95,6 +95,36 @@
         margin-top: 2rem;
       }
 
+      &--clickable {
+        cursor: pointer;
+        user-select: none;
+        transition: opacity 0.2s ease-in-out;
+
+        &:hover {
+          opacity: 0.8;
+        }
+
+        &:active {
+          opacity: 0.6;
+        }
+      }
+
+      &__arrow {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.25rem;
+        height: 1.25rem;
+        transition: transform 0.2s ease-in-out;
+
+        svg {
+          width: 1rem;
+          height: 1rem;
+          stroke-width: 2;
+        }
+      }
+
       &__hint {
         margin-left: auto;
         font-size: 10px;
