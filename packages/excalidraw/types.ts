@@ -516,9 +516,17 @@ export type LibraryItem = {
   created: number;
   name?: string;
   error?: string;
+  collectionId: string;
 };
+export type LibraryCollection = {
+  id: string;
+  name: string;
+  /** timestamp in epoch (ms) */
+  created: number;
+};
+export type LibraryCollections = readonly LibraryCollection[];
 export type LibraryItems = readonly LibraryItem[];
-export type LibraryItems_anyVersion = LibraryItems | LibraryItems_v1;
+export type LibraryItems_anyVersion = LibraryItems | LibraryItems_v1 | LibraryCollections;
 
 export type LibraryItemsSource =
   | ((
@@ -531,6 +539,7 @@ export type ExcalidrawInitialDataState = Merge<
   ImportedDataState,
   {
     libraryItems?: MaybePromise<Required<ImportedDataState>["libraryItems"]>;
+    libraryCollections?: MaybePromise<LibraryCollections>;
   }
 >;
 
@@ -601,6 +610,7 @@ export interface ExcalidrawProps {
   detectScroll?: boolean;
   handleKeyboardGlobally?: boolean;
   onLibraryChange?: (libraryItems: LibraryItems) => void | Promise<any>;
+  onLibraryCollectionsChange?: (collections: LibraryCollections) => void | Promise<any>; 
   autoFocus?: boolean;
   generateIdForFile?: (file: File) => string | Promise<string>;
   generateLinkForSelection?: (id: string, type: "element" | "group") => string;
@@ -833,6 +843,13 @@ export interface ExcalidrawImperativeAPI {
   applyDeltas: InstanceType<typeof App>["applyDeltas"];
   mutateElement: InstanceType<typeof App>["mutateElement"];
   updateLibrary: InstanceType<typeof Library>["updateLibrary"];
+  createLibraryCollection: (name: string) => Promise<LibraryCollection>;
+  deleteLibraryCollection: (collectionId: string) => Promise<void>;
+  renameLibraryCollection: (collectionId: string, name: string) => Promise<void>;
+  getLibraryCollections: () => Promise<LibraryCollections>;
+  setLibraryCollection: (collections: LibraryCollections) => Promise<LibraryCollections>;
+  addItemToCollection: (collectionId: string, elements: readonly NonDeleted<ExcalidrawElement>[]) => Promise<LibraryItem>;
+  removeItemsFromCollection: (collectionId: string, itemIds: string[]) => Promise<void>;
   resetScene: InstanceType<typeof App>["resetScene"];
   getSceneElementsIncludingDeleted: InstanceType<
     typeof App
