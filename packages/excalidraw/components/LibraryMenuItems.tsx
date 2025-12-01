@@ -19,7 +19,10 @@ import { useScrollPosition } from "../hooks/useScrollPosition";
 import { t } from "../i18n";
 
 import { LibraryMenuControlButtons } from "./LibraryMenuControlButtons";
-import { LibraryDropdownMenu } from "./LibraryMenuHeaderContent";
+import {
+  CollectionHeaderDropdown,
+  LibraryDropdownMenu,
+} from "./LibraryMenuHeaderContent";
 import {
   LibraryMenuSection,
   LibraryMenuSectionGrid,
@@ -32,7 +35,7 @@ import "./LibraryMenuItems.scss";
 
 import { TextField } from "./TextField";
 
-import { useEditorInterface } from "./App";
+import { useApp, useEditorInterface, useExcalidrawSetAppState } from "./App";
 
 import { Button } from "./Button";
 import { collapseDownIcon, collapseUpIcon } from "./icons";
@@ -266,16 +269,46 @@ export default function LibraryMenuItems({
   const JSX_whenNotSearching = !IS_SEARCHING && (
     <>
       {!IS_LIBRARY_EMPTY && (
-        <div
-          className="library-menu-items-container__header library-menu-items-container__header--clickable"
-          onClick={() =>
-            setIsPersonalLibraryCollapsed(!isPersonalLibraryCollapsed)
-          }
-        >
-          <span>{t("labels.personalLib")}</span>
-          <span className="library-menu-items-container__header__arrow">
-            {isPersonalLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
+        <div className="library-menu-items-container__header">
+          <span
+            onClick={() =>
+              setIsPersonalLibraryCollapsed(!isPersonalLibraryCollapsed)
+            }
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flex: 1,
+              cursor: "pointer",
+            }}
+          >
+            <span>{t("labels.personalLib")}</span>
+            <span className="library-menu-items-container__header__arrow">
+              {isPersonalLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
+            </span>
           </span>
+          <CollectionHeaderDropdown
+            collectionName={t("labels.personalLib")}
+            onRename={() => {
+              const newName = window.prompt(
+                "Rename collection",
+                t("labels.personalLib"),
+              );
+              if (newName) {
+                // TODO: Rename collection
+                console.log("Rename to:", newName);
+              }
+            }}
+            onDelete={() => {
+              if (
+                window.confirm(
+                  `Delete "${t("labels.personalLib")}" collection?`,
+                )
+              ) {
+                // TODO: Delete collection
+                console.log("Delete collection");
+              }
+            }}
+          />
         </div>
       )}
       {!isPersonalLibraryCollapsed &&
@@ -319,16 +352,48 @@ export default function LibraryMenuItems({
 
       {publishedItems.length > 0 && (
         <div
-          className="library-menu-items-container__header library-menu-items-container__header--clickable"
+          className="library-menu-items-container__header"
           style={{ marginTop: "0.75rem" }}
-          onClick={() =>
-            setIsExcalidrawLibraryCollapsed(!isExcalidrawLibraryCollapsed)
-          }
         >
-          <span>{t("labels.excalidrawLib")}</span>
-          <span className="library-menu-items-container__header__arrow">
-            {isExcalidrawLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
+          <span
+            onClick={() =>
+              setIsExcalidrawLibraryCollapsed(!isExcalidrawLibraryCollapsed)
+            }
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flex: 1,
+              cursor: "pointer",
+            }}
+          >
+            <span>{t("labels.excalidrawLib")}</span>
+            <span className="library-menu-items-container__header__arrow">
+              {isExcalidrawLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
+            </span>
           </span>
+          <CollectionHeaderDropdown
+            collectionName={t("labels.excalidrawLib")}
+            onRename={() => {
+              const newName = window.prompt(
+                "Rename collection",
+                t("labels.excalidrawLib"),
+              );
+              if (newName) {
+                // TODO: Rename collection
+                console.log("Rename to:", newName);
+              }
+            }}
+            onDelete={() => {
+              if (
+                window.confirm(
+                  `Delete "${t("labels.excalidrawLib")}" collection?`,
+                )
+              ) {
+                // TODO: Delete collection
+                console.log("Delete collection");
+              }
+            }}
+          />
         </div>
       )}
       {publishedItems.length > 0 && !isExcalidrawLibraryCollapsed && (

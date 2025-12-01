@@ -23,6 +23,7 @@ import {
   DotsIcon,
   ExportIcon,
   LoadIcon,
+  pencilIcon,
   PlusIcon,
   publishIcon,
   TrashIcon,
@@ -291,6 +292,55 @@ export const LibraryDropdownMenuButton: React.FC<{
         />
       )}
       {publishLibSuccess && renderPublishSuccess()}
+    </div>
+  );
+};
+
+export const CollectionHeaderDropdown: React.FC<{
+  collectionName: string;
+  onRename: () => void;
+  onDelete: () => void;
+}> = ({ collectionName, onRename, onDelete }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div
+      className="library-menu-dropdown-container"
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
+      <DropdownMenu open={isOpen}>
+        <DropdownMenu.Trigger
+          onToggle={() => setIsOpen(!isOpen)}
+          className="collection-header-dropdown-trigger"
+        >
+          {DotsIcon}
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content
+          onClickOutside={() => setIsOpen(false)}
+          onSelect={() => setIsOpen(false)}
+          className="collection-header-menu"
+        >
+          <DropdownMenu.Item
+            onSelect={onRename}
+            icon={pencilIcon}
+            data-testid="collection-dropdown--rename"
+          >
+            Rename
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            onSelect={onDelete}
+            icon={TrashIcon}
+            data-testid="collection-dropdown--delete"
+          >
+            {t("labels.delete")}
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu>
     </div>
   );
 };
