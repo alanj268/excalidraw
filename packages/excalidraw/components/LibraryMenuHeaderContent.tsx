@@ -23,6 +23,7 @@ import {
   DotsIcon,
   ExportIcon,
   LoadIcon,
+  PlusIcon,
   publishIcon,
   TrashIcon,
 } from "./icons";
@@ -211,6 +212,26 @@ export const LibraryDropdownMenuButton: React.FC<{
               {t("buttons.load")}
             </DropdownMenu.Item>
           )}
+          <DropdownMenu.Item
+            onSelect={async () => {
+              // prompt for a collection name and create a new library collection
+              const name = window.prompt("Create library");
+              if (!name) {
+                return;
+              }
+              try {
+                // `library` prop is passed to this component
+                // create collection and swallow any error showing it to the user
+                await library.createLibraryCollection(name);
+              } catch (error: any) {
+                setAppState({ errorMessage: error?.message || String(error) });
+              }
+            }}
+            icon={PlusIcon}
+            data-testid="lib-dropdown--create"
+          >
+            {"Create library"}
+          </DropdownMenu.Item>
           {!!items.length && (
             <DropdownMenu.Item
               onSelect={onLibraryExport}
