@@ -72,7 +72,10 @@ type LibraryUpdate = {
 
 // an object so that we can later add more properties to it without breaking,
 // such as schema version
-export type LibraryPersistedData = { libraryItems: LibraryItems; libraryCollections: LibraryCollections };
+export type LibraryPersistedData = {
+  libraryItems: LibraryItems;
+  libraryCollections: LibraryCollections;
+};
 
 const onLibraryUpdateEmitter = new Emitter<
   [update: LibraryUpdate, libraryItems: LibraryItems]
@@ -100,7 +103,10 @@ export interface LibraryPersistenceAdapter {
      * purposes, in which case host app can implement more aggressive caching.
      */
     source: LibraryAdatapterSource;
-  }): MaybePromise<{ libraryItems: LibraryItems_anyVersion; libraryCollections: LibraryCollections } | null>;
+  }): MaybePromise<{
+    libraryItems: LibraryItems_anyVersion;
+    libraryCollections: LibraryCollections;
+  } | null>;
   /** Should persist to the database as is (do no change the data structure). */
   save(libraryData: LibraryPersistedData): MaybePromise<void>;
 }
@@ -239,7 +245,9 @@ class Library {
     return this.updateQueue[this.updateQueue.length - 1];
   };
 
-  private getLastCollectionsUpdateTask = (): Promise<LibraryCollections> | undefined => {
+  private getLastCollectionsUpdateTask = ():
+    | Promise<LibraryCollections>
+    | undefined => {
     return this.collectionsUpdateQueue[this.collectionsUpdateQueue.length - 1];
   };
 
@@ -313,18 +321,31 @@ class Library {
     return collection;
   };
 
-  deleteLibraryCollection = async (
-    collectionId: string
-  ): Promise<void> => {
-    await this.setCollections((current) => current.filter((collection) => collection.id !== collectionId));
-    
+  deleteLibraryCollection = async (collectionId: string): Promise<void> => {
+    await this.setCollections((current) =>
+      current.filter((collection) => collection.id !== collectionId),
+    );
+
     // Also delete all items that belong to this collection
     const currentItems = await this.getLatestLibrary();
     const itemsWithoutCollection = currentItems.filter(
       (item) => item.collectionId !== collectionId,
     );
     await this.setLibrary(itemsWithoutCollection);
-  }
+  };
+
+  renameLibraryCollection = async (
+    collectionId: string,
+    newName: string,
+  ): Promise<void> => {
+    await this.setCollections((current) =>
+      current.map((collection) =>
+        collection.id === collectionId
+          ? { ...collection, name: newName }
+          : collection,
+      ),
+    );
+  };
 
   setCollections = (
     collections:
@@ -342,9 +363,7 @@ class Library {
           collections = collections(this.libraryCollections);
         }
 
-        this.libraryCollections = cloneLibraryCollections(
-          await collections,
-        );
+        this.libraryCollections = cloneLibraryCollections(await collections);
 
         latestLibraryCollectionsSnapshot = cloneLibraryCollections(
           this.libraryCollections,
@@ -726,7 +745,7 @@ class AdapterTransaction {
 
     return task();
   }
-  
+
   static run = async <T>(
     adapter: LibraryPersistenceAdapter,
     fn: (transaction: AdapterTransaction) => Promise<T>,
@@ -1036,12 +1055,13 @@ export const useHandleLibrary = (
               let restoredData: LibraryItems | null = null;
               try {
                 // Load collections from the regular adapter
-                const collections = await AdapterTransaction.getLibraryCollections(
-                  adapter,
-                  "load",
-                  false,
-                );
-                
+                const collections =
+                  await AdapterTransaction.getLibraryCollections(
+                    adapter,
+                    "load",
+                    false,
+                  );
+
                 // if no library data to migrate, assume no migration needed
                 // and skip persisting to new data store, as well as well
                 // clearing the old store via `migrationAdapter.clear()`
@@ -1153,7 +1173,7 @@ export const useHandleLibrary = (
       initCollectionsPromise.then(async (collections) => {
         if (optsRef.current.excalidrawAPI?.setLibraryCollection) {
           const loadedCollections = collections || [];
-          
+
           if (loadedCollections.length > 0) {
             await optsRef.current.excalidrawAPI
               .setLibraryCollection(loadedCollections)
