@@ -56,9 +56,6 @@ const ITEMS_RENDERED_PER_BATCH = 17;
 // speed it up
 const CACHED_ITEMS_RENDERED_PER_BATCH = 64;
 
-const DEFAULT_COLLECTION_ID = "default";
-const PUBLISHED_COLLECTION_ID = "published";
-
 export default function LibraryMenuItems({
   isLoading,
   libraryItems,
@@ -82,6 +79,8 @@ export default function LibraryMenuItems({
   selectedItems: LibraryItem["id"][];
   onSelectItems: (id: LibraryItem["id"][]) => void;
 }) {
+  const app = useApp();
+  const setAppState = useExcalidrawSetAppState();
   const editorInterface = useEditorInterface();
   const libraryContainerRef = useRef<HTMLDivElement>(null);
   const scrollPosition = useScrollPosition<HTMLDivElement>(libraryContainerRef);
@@ -127,42 +126,27 @@ export default function LibraryMenuItems({
     });
   }, [libraryItems, searchInputValue]);
 
-  // Filter custom collections (exclude default and published collections)
-  const customCollections = useMemo(() => {
-    const filtered = libraryCollections.filter(
-      (collection) =>
-        collection.id !== DEFAULT_COLLECTION_ID &&
-        collection.id !== PUBLISHED_COLLECTION_ID,
-    );
-    // Debug: log collections to help troubleshoot
-    if (filtered.length > 0) {
-      console.log("Custom collections found:", filtered);
-    }
-    return filtered;
-  }, [libraryCollections]);
-
-  // Get items for each custom collection
-  const customCollectionItems = useMemo(() => {
+  // Get items for each collection
+  const collectionItems = useMemo(() => {
     const itemsMap: Record<string, LibraryItems> = {};
-    customCollections.forEach((collection) => {
+    libraryCollections.forEach((collection) => {
       itemsMap[collection.id] = libraryItems.filter(
         (item) => item.collectionId === collection.id,
       );
     });
     return itemsMap;
-  }, [customCollections, libraryItems]);
+  }, [libraryCollections, libraryItems]);
 
-  // Unpublished items that don't belong to any custom collection
+  // Unpublished items that don't belong to any collection
   const unpublishedItems = useMemo(
     () =>
       libraryItems.filter(
         (item) =>
           item.status !== "published" &&
           (!item.collectionId ||
-            item.collectionId === DEFAULT_COLLECTION_ID ||
-            !customCollections.some((c) => c.id === item.collectionId)),
+            !libraryCollections.some((c) => c.id === item.collectionId)),
       ),
-    [libraryItems, customCollections],
+    [libraryItems, libraryCollections],
   );
 
   const publishedItems = useMemo(
@@ -173,13 +157,13 @@ export default function LibraryMenuItems({
   const onItemSelectToggle = useCallback(
     (id: LibraryItem["id"], event: React.MouseEvent) => {
       const shouldSelect = !selectedItems.includes(id);
-      // Build ordered items list: unpublished, then custom collections, then published
-      const customCollectionItemsList = customCollections.flatMap(
-        (collection) => customCollectionItems[collection.id] || [],
+      // Build ordered items list: unpublished, then collections, then published
+      const collectionItemsList = libraryCollections.flatMap(
+        (collection) => collectionItems[collection.id] || [],
       );
       const orderedItems = [
         ...unpublishedItems,
-        ...customCollectionItemsList,
+        ...collectionItemsList,
         ...publishedItems,
       ];
       if (shouldSelect) {
@@ -226,8 +210,8 @@ export default function LibraryMenuItems({
       publishedItems,
       selectedItems,
       unpublishedItems,
-      customCollections,
-      customCollectionItems,
+      libraryCollections,
+      collectionItems,
     ],
   );
 
@@ -337,36 +321,13 @@ export default function LibraryMenuItems({
               {isPersonalLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
             </span>
           </span>
-          <CollectionHeaderDropdown
-            collectionName={t("labels.personalLib")}
-            onRename={() => {
-              const newName = window.prompt(
-                "Rename collection",
-                t("labels.personalLib"),
-              );
-              if (newName) {
-                // TODO: Rename collection
-                console.log("Rename to:", newName);
-              }
-            }}
-            onDelete={() => {
-              if (
-                window.confirm(
-                  `Delete "${t("labels.personalLib")}" collection?`,
-                )
-              ) {
-                // TODO: Delete collection
-                console.log("Delete collection");
-              }
-            }}
-          />
         </div>
       )}
       {!isPersonalLibraryCollapsed &&
         (!pendingElements.length && !unpublishedItems.length ? (
           <div className="library-menu-items__no-items">
             {!publishedItems.length && (
-              <div className="library-menu-items__no-items__label">
+            <div className="library-menu-items__no-items__label">
                 {t("library.noItems")}
               </div>
             )}
@@ -417,29 +378,6 @@ export default function LibraryMenuItems({
               {isExcalidrawLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
             </span>
           </span>
-          <CollectionHeaderDropdown
-            collectionName={t("labels.excalidrawLib")}
-            onRename={() => {
-              const newName = window.prompt(
-                "Rename collection",
-                t("labels.excalidrawLib"),
-              );
-              if (newName) {
-                // TODO: Rename collection
-                console.log("Rename to:", newName);
-              }
-            }}
-            onDelete={() => {
-              if (
-                window.confirm(
-                  `Delete "${t("labels.excalidrawLib")}" collection?`,
-                )
-              ) {
-                // TODO: Delete collection
-                console.log("Delete collection");
-              }
-            }}
-          />
         </div>
       )}
       {publishedItems.length > 0 && !isExcalidrawLibraryCollapsed && (
@@ -457,8 +395,8 @@ export default function LibraryMenuItems({
       )}
 
       {/* Custom Collections */}
-      {customCollections.map((collection) => {
-        const collectionItems = customCollectionItems[collection.id] || [];
+      {libraryCollections.map((collection) => {
+        const items = collectionItems[collection.id] || [];
         const isCollapsed = customCollectionCollapsed[collection.id] ?? false;
 
         return (
@@ -498,20 +436,25 @@ export default function LibraryMenuItems({
                     console.log("Rename to:", newName);
                   }
                 }}
-                onDelete={() => {
+                onDelete={async () => {
                   if (
                     window.confirm(
                       `Delete "${collection.name}" collection?`,
                     )
                   ) {
-                    // TODO: Delete collection
-                    console.log("Delete collection");
+                    try {
+                      await app.library.deleteLibraryCollection(collection.id);
+                    } catch (error: any) {
+                      setAppState({
+                        errorMessage: error?.message || String(error),
+                      });
+                    }
                   }
                 }}
               />
             </div>
             {!isCollapsed &&
-              (collectionItems.length === 0 && !pendingElements.length ? (
+              (items.length === 0 && !pendingElements.length ? (
                 <div className="library-menu-items__no-items">
                   <div className="library-menu-items__no-items__hint">
                     {t("library.hint_emptyLibrary")}
@@ -530,10 +473,10 @@ export default function LibraryMenuItems({
                       svgCache={svgCache}
                     />
                   )}
-                  {collectionItems.length > 0 && (
+                  {items.length > 0 && (
                     <LibraryMenuSection
                       itemsRenderedPerBatch={itemsRenderedPerBatch}
-                      items={collectionItems}
+                      items={items}
                       onItemSelectToggle={onItemSelectToggle}
                       onItemDrag={onItemDrag}
                       onClick={onItemClick}

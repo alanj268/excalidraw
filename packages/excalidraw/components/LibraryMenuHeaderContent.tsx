@@ -222,16 +222,7 @@ export const LibraryDropdownMenuButton: React.FC<{
                 return;
               }
               try {
-                // `library` prop is passed to this component
-                // create collection and swallow any error showing it to the user
-                const newCollection = await library.createLibraryCollection(name);
-                // Log the newly created collection to verify it was created
-                console.log("Created collection:", newCollection);
-                // Collections are automatically updated in libraryCollectionsAtom
-                // Access all collections after creation completes
-                const allCollections = await library.getCollections();
-                console.log("All collections:", allCollections);
-                // The collection is now available in libraryCollectionsAtom and can be displayed in the UI
+                await library.createLibraryCollection(name);
               } catch (error: any) {
                 setAppState({ errorMessage: error?.message || String(error) });
               }
