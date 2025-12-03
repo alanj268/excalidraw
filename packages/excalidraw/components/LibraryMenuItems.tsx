@@ -469,43 +469,6 @@ export default function LibraryMenuItems({
           </LibraryMenuSectionGrid>
         ))}
 
-      {publishedItems.length > 0 && (
-        <div
-          className="library-menu-items-container__header"
-          style={{ marginTop: "0.75rem" }}
-        >
-          <span
-            onClick={() =>
-              setIsExcalidrawLibraryCollapsed(!isExcalidrawLibraryCollapsed)
-            }
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flex: 1,
-              cursor: "pointer",
-            }}
-          >
-            <span>{t("labels.excalidrawLib")}</span>
-            <span className="library-menu-items-container__header__arrow">
-              {isExcalidrawLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
-            </span>
-          </span>
-        </div>
-      )}
-      {publishedItems.length > 0 && !isExcalidrawLibraryCollapsed && (
-        <LibraryMenuSectionGrid>
-          <LibraryMenuSection
-            itemsRenderedPerBatch={itemsRenderedPerBatch}
-            items={publishedItems}
-            onItemSelectToggle={onItemSelectToggle}
-            onItemDrag={onItemDrag}
-            onClick={onItemClick}
-            isItemSelected={isItemSelected}
-            svgCache={svgCache}
-          />
-        </LibraryMenuSectionGrid>
-      )}
-
       {/* Custom Collections */}
       {libraryCollections.map((collection) => {
         const items = collectionItems[collection.id] || [];
@@ -611,6 +574,43 @@ export default function LibraryMenuItems({
           </React.Fragment>
         );
       })}
+
+      {publishedItems.length > 0 && (
+        <div
+          className="library-menu-items-container__header"
+          style={{ marginTop: "0.75rem" }}
+        >
+          <span
+            onClick={() =>
+              setIsExcalidrawLibraryCollapsed(!isExcalidrawLibraryCollapsed)
+            }
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flex: 1,
+              cursor: "pointer",
+            }}
+          >
+            <span>{t("labels.excalidrawLib")}</span>
+            <span className="library-menu-items-container__header__arrow">
+              {isExcalidrawLibraryCollapsed ? collapseDownIcon : collapseUpIcon}
+            </span>
+          </span>
+        </div>
+      )}
+      {publishedItems.length > 0 && !isExcalidrawLibraryCollapsed && (
+        <LibraryMenuSectionGrid>
+          <LibraryMenuSection
+            itemsRenderedPerBatch={itemsRenderedPerBatch}
+            items={publishedItems}
+            onItemSelectToggle={onItemSelectToggle}
+            onItemDrag={onItemDrag}
+            onClick={onItemClick}
+            isItemSelected={isItemSelected}
+            svgCache={svgCache}
+          />
+        </LibraryMenuSectionGrid>
+      )}
     </>
   );
 
