@@ -56,6 +56,10 @@ const ITEMS_RENDERED_PER_BATCH = 17;
 // speed it up
 const CACHED_ITEMS_RENDERED_PER_BATCH = 64;
 
+const COLLECTION_COLLAPSE_STATE_KEY = "excalidraw-library-collection-collapse-state";
+const PERSONAL_LIBRARY_COLLAPSE_KEY = "excalidraw-library-personal-collapsed";
+const EXCALIDRAW_LIBRARY_COLLAPSE_KEY = "excalidraw-library-excalidraw-collapsed";
+
 export default function LibraryMenuItems({
   isLoading,
   libraryItems,
@@ -98,15 +102,103 @@ export default function LibraryMenuItems({
   >(null);
 
   const [searchInputValue, setSearchInputValue] = useState("");
+  
+  // Load Personal Library collapse state
   const [isPersonalLibraryCollapsed, setIsPersonalLibraryCollapsed] =
-    useState(false);
+    useState(() => {
+      try {
+        const saved = localStorage.getItem(PERSONAL_LIBRARY_COLLAPSE_KEY);
+        return saved === "true";
+      } catch (error) {
+        console.warn("Failed to load personal library collapse state:", error);
+        return false;
+      }
+    });
+  
+  // Load Excalidraw Library collapse state
   const [isExcalidrawLibraryCollapsed, setIsExcalidrawLibraryCollapsed] =
-    useState(false);
+    useState(() => {
+      try {
+        const saved = localStorage.getItem(EXCALIDRAW_LIBRARY_COLLAPSE_KEY);
+        return saved === "true";
+      } catch (error) {
+        console.warn("Failed to load excalidraw library collapse state:", error);
+        return false;
+      }
+    });
   
   const [libraryCollections] = useAtom(libraryCollectionsAtom);
+  
+  // Load library collections collapse state
   const [customCollectionCollapsed, setCustomCollectionCollapsed] = useState<
     Record<string, boolean>
-  >({});
+  >(() => {
+    try {
+      const saved = localStorage.getItem(COLLECTION_COLLAPSE_STATE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.warn("Failed to load collection collapse state:", error);
+    }
+    return {};
+  });
+
+  // Save Personal Library collapse state to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        PERSONAL_LIBRARY_COLLAPSE_KEY,
+        String(isPersonalLibraryCollapsed),
+      );
+    } catch (error) {
+      console.warn("Failed to save personal library collapse state:", error);
+    }
+  }, [isPersonalLibraryCollapsed]);
+
+  // Save Excalidraw Library collapse state to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        EXCALIDRAW_LIBRARY_COLLAPSE_KEY,
+        String(isExcalidrawLibraryCollapsed),
+      );
+    } catch (error) {
+      console.warn("Failed to save excalidraw library collapse state:", error);
+    }
+  }, [isExcalidrawLibraryCollapsed]);
+
+  // Save library collections collapse state to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        COLLECTION_COLLAPSE_STATE_KEY,
+        JSON.stringify(customCollectionCollapsed),
+      );
+    } catch (error) {
+      console.warn("Failed to save collection collapse state:", error);
+    }
+  }, [customCollectionCollapsed]);
+
+  // Clean up stale library collections IDs from localStorage
+  useEffect(() => {
+    const collectionIds = new Set(libraryCollections.map((c) => c.id));
+    const hasStaleKeys = Object.keys(customCollectionCollapsed).some(
+      (id) => !collectionIds.has(id),
+    );
+    
+    if (hasStaleKeys) {
+      setCustomCollectionCollapsed((prev) => {
+        const cleaned: Record<string, boolean> = {};
+        for (const id of collectionIds) {
+          if (prev[id] !== undefined) {
+            cleaned[id] = prev[id];
+          }
+        }
+        return cleaned;
+      });
+    }
+  }, [libraryCollections]);
 
   const IS_LIBRARY_EMPTY = !libraryItems.length && !pendingElements.length;
 
