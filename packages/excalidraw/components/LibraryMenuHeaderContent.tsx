@@ -20,6 +20,7 @@ import { ToolButton } from "./ToolButton";
 import Trans from "./Trans";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
 import {
+  ArrowRightIcon,
   DotsIcon,
   ExportIcon,
   LoadIcon,
@@ -299,7 +300,19 @@ export const CollectionHeaderDropdown: React.FC<{
   collectionName: string;
   onRename: () => void;
   onDelete: () => void;
-}> = ({ collectionName, onRename, onDelete }) => {
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+}> = ({
+  collectionName,
+  onRename,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp = false,
+  canMoveDown = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -338,6 +351,32 @@ export const CollectionHeaderDropdown: React.FC<{
           >
             {t("labels.delete")}
           </DropdownMenu.Item>
+          {onMoveUp && canMoveUp && (
+            <DropdownMenu.Item
+              onSelect={onMoveUp}
+              icon={
+                <div style={{ transform: "rotate(-90deg)" }}>
+                  {ArrowRightIcon}
+                </div>
+              }
+              data-testid="collection-dropdown--move-up"
+            >
+              Move Up
+            </DropdownMenu.Item>
+          )}
+          {onMoveDown && canMoveDown && (
+            <DropdownMenu.Item
+              onSelect={onMoveDown}
+              icon={
+                <div style={{ transform: "rotate(90deg)" }}>
+                  {ArrowRightIcon}
+                </div>
+              }
+              data-testid="collection-dropdown--move-down"
+            >
+              Move Down
+            </DropdownMenu.Item>
+          )}
         </DropdownMenu.Content>
       </DropdownMenu>
     </div>

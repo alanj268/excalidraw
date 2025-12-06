@@ -743,6 +743,8 @@ class App extends React.Component<AppProps, AppState> {
         createLibraryCollection: this.library.createLibraryCollection,
         deleteLibraryCollection: this.library.deleteLibraryCollection,
         renameLibraryCollection: this.library.renameLibraryCollection,
+        moveUpCollection: this.library.moveUpCollection,
+        moveDownCollection: this.library.moveDownCollection,
         getLibraryCollections: this.library.getCollections,
         setLibraryCollection: this.library.setCollections,
         addFiles: this.addFiles,
@@ -11815,7 +11817,12 @@ class App extends React.Component<AppProps, AppState> {
       ...actionAddToLibrary,
       label: () => `${baseLabel} "${collectionName}"`,
       perform: (elements, appState, _, app) => {
-        return actionAddToLibrary.perform(elements, appState, collectionId, app);
+        return actionAddToLibrary.perform(
+          elements,
+          appState,
+          collectionId,
+          app,
+        );
       },
     };
   };
@@ -11882,7 +11889,8 @@ class App extends React.Component<AppProps, AppState> {
     // Get library collections for collection-specific "Add to library" options
     const libraryCollections = editorJotaiStore.get(libraryCollectionsAtom);
     const collectionActions: ContextMenuItems = libraryCollections.map(
-      (collection) => this.createAddToCollectionAction(collection.id, collection.name),
+      (collection) =>
+        this.createAddToCollectionAction(collection.id, collection.name),
     );
 
     const addToLibrarySection: ContextMenuItems = [
